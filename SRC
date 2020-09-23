@@ -1,0 +1,244 @@
+1  package.json 
+@@ -16,6 +16,7 @@
+    "react-modal": "^3.11.2",
+    "react-redux": "^7.2.0",
+    "react-reveal": "^1.2.2",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "3.4.1",
+    "redux": "^4.0.5",
+    "redux-thunk": "^2.3.0",
+ 8  server.js 
+@@ -80,6 +80,14 @@ app.post("/api/orders", async (req, res) => {
+  const order = await Order(req.body).save();
+  res.send(order);
+});
+app.get("/api/orders", async (req, res) => {
+  const orders = await Order.find({});
+  res.send(orders);
+});
+app.delete("/api/orders/:id", async (req, res) => {
+  const order = await Order.findByIdAndDelete(req.params.id);
+  res.send(order);
+});
+
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log("serve at http://localhost:5000"));
+ 36  src/App.js 
+@@ -1,31 +1,27 @@
+import React from "react";
+import Products from "./components/Products";
+import Filter from "./components/Filter";
+import Cart from "./components/Cart";
+import store from "./store";
+import { Provider } from "react-redux";
+import { BrowserRouter, Route, Link } from "react-router-dom";
+import HomeScreen from "./screens/HomeScreen";
+import AdminScreen from "./screens/AdminScreen";
+
+class App extends React.Component {
+  render() {
+    return (
+      <Provider store={store}>
+        <div className="grid-container">
+          <header>
+            <a href="/">React Shopping Cart</a>
+          </header>
+          <main>
+            <div className="content">
+              <div className="main">
+                <Filter></Filter>
+                <Products></Products>
+              </div>
+              <div className="sidebar">
+                <Cart />
+              </div>
+            </div>
+          </main>
+          <footer>All right is reserved.</footer>
+        </div>
+        <BrowserRouter>
+          <div className="grid-container">
+            <header>
+              <Link to="/">React Shopping Cart</Link>
+	<Link to="/">Home </Link>
+	<Link to="/">MrOrder</Link>
+	<Link to="/">Cart</Link>
+              <Link to="/admin">Admin</Link>
+            </header>
+            <main>
+              <Route path="/admin" component={AdminScreen} />
+              <Route path="/" component={HomeScreen} exact />
+            </main>
+            <footer>All right is reserved.</footer>
+          </div>
+        </BrowserRouter>
+      </Provider>
+    );
+  }
+ 9  src/actions/orderActions.js 
+@@ -1,4 +1,4 @@
+import { CREATE_ORDER, CLEAR_CART, CLEAR_ORDER } from "../types";
+import { CREATE_ORDER, CLEAR_CART, CLEAR_ORDER, FETCH_ORDERS } from "../types";
+
+export const createOrder = (order) => (dispatch) => {
+  fetch("/api/orders", {
+@@ -18,3 +18,10 @@ export const createOrder = (order) => (dispatch) => {
+export const clearOrder = () => (dispatch) => {
+  dispatch({ type: CLEAR_ORDER });
+};
+export const fetchOrders = () => (dispatch) => {
+  fetch("/api/orders")
+    .then((res) => res.json())
+    .then((data) => {
+      dispatch({ type: FETCH_ORDERS, payload: data });
+    });
+};
+ 60  src/components/Orders.js 
+@@ -0,0 +1,60 @@
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { fetchOrders } from "../actions/orderActions";
+import formatCurrency from "../util";
+
+class Orders extends Component {
+  componentDidMount() {
+    this.props.fetchOrders();
+  }
+  render() {
+    const { orders } = this.props;
+    return !orders ? (
+      <div>Orders</div>
+    ) : (
+      <div className="orders">
+        <h2>Orders</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>DATE</th>
+              <th>TOTAL</th>
+              <th>NAME</th>
+              <th>EMAIL</th>
+              <th>ADDRESS</th>
+              <th>ITEMS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr>
+                <td>{order._id}</td>
+                <td>{order.createdAt}</td>
+                <td> {formatCurrency(order.total)}</td>
+                <td>{order.name}</td>
+                <td>{order.email}</td>
+                <td>{order.address}</td>
+                <td>
+                  {order.cartItems.map((item) => (
+                    <div>
+                      {item.count} {" x "} {item.title}
+                    </div>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+}
+export default connect(
+  (state) => ({
+    orders: state.order.orders,
+  }),
+  {
+    fetchOrders,
+  }
+)(Orders);
+ 15  src/index.css 
+@@ -39,6 +39,7 @@ header {
+  background-color: #203040;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+}
+@@ -237,3 +238,17 @@ input {
+.success-message {
+  color: green;
+}
+/* Orders */
+.orders {
+  width: 100%;
+  padding: 10px;
+}
+tbody > tr:nth-child(odd) {
+  background-color: #f0f0f0;
+}
+td {
+  padding: 5px;
+}
+th {
+  text-align: left;
+}
+ 4  src/reducers/orderReducers.js 
+@@ -1,11 +1,13 @@
+import { CREATE_ORDER, CLEAR_ORDER } from "../types";
+import { CREATE_ORDER, CLEAR_ORDER, FETCH_ORDERS } from "../types";
+
+const orderReducer = (state = {}, action) => {
+  switch (action.type) {
+    case CREATE_ORDER:
+      return { order: action.payload };
+    case CLEAR_ORDER:
+      return { order: null };
+    case FETCH_ORDERS:
+      return { orders: action.payload };
+    default:
+      return state;
+  }
+ 12  src/screens/AdminScreen.js 
+@@ -0,0 +1,12 @@
+import React, { Component } from "react";
+import Orders from "../components/Orders";
+
+export default class AdminScreen extends Component {
+  render() {
+    return (
+      <div>
+        <Orders />
+      </div>
+    );
+  }
+}
+ 22  src/screens/HomeScreen.js 
+@@ -0,0 +1,22 @@
+import React, { Component } from "react";
+import Filter from "../components/Filter";
+import Products from "../components/Products";
+import Cart from "../components/Cart";
+
+export default class HomeScreen extends Component {
+  render() {
+    return (
+      <div>
+        <div className="content">
+          <div className="main">
+            <Filter></Filter>
+            <Products></Products>
+          </div>
+          <div className="sidebar">
+            <Cart />
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+ 1  src/types.js 
+@@ -6,3 +6,4 @@ export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
+export const CREATE_ORDER = "CREATE_ORDER";
+export const CLEAR_ORDER = "CLEAR_ORDER";
+export const CLEAR_CART = "CLEAR_CART";
+export const FETCH_ORDERS = "FETCH_ORDERS";
