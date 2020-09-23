@@ -1,0 +1,246 @@
+ 39  src/App.js 
+@@ -1,16 +1,35 @@
+// feature 1
+import React from "react";
+import data from "./data.json";
+import Products from "./components/Products";
+
+function App() {
+  return (
+    <div className="grid-container">
+      <header>
+        <a href="/">React Shopping Cart</a>
+      </header>
+      <main>Product List</main>
+      <footer>All right is reserved.</footer>
+    </div>
+  );
+class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      products: data.products,
+      size: "",
+      sort: "",
+    };
+  }
+  render() {
+    return (
+      <div className="grid-container">
+        <header>
+          <a href="/">React Shopping Cart</a>
+	<a href="/">Home |</a>
+	<a href="/">MyOrder |</a>
+	<a href="/">Cart</a>
+
+        </header>
+        <main>
+          <div className="content">
+            <div className="main">
+              <Products products={this.state.products}></Products>
+            </div>
+            <div className="sidebar">Cart Items</div>
+          </div>
+        </main>
+        <footer>All right is reserved.</footer>
+      </div>
+    );
+  }
+}
+
+export default App;
+ 27  src/components/Products.js 
+@@ -0,0 +1,27 @@
+import React, { Component } from "react";
+import formatCurrency from "../util";
+
+export default class Products extends Component {
+  render() {
+    return (
+      <div>
+        <ul className="products">
+          {this.props.products.map((product) => (
+            <li key={product._id}>
+              <div className="product">
+                <a href={"#" + product._id}>
+                  <img src={product.image} alt={product.title}></img>
+                  <p>{product.title}</p>
+                </a>
+                <div className="product-price">
+                  <div>{formatCurrency(product.price)}</div>
+                  <button className="button primary">Add To Cart</button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+}
+ 52  src/data.json 
+@@ -0,0 +1,52 @@
+{
+  "products": [
+    {
+      "_id": "image1",
+      "image": "/images/image1.jpg",
+      "title": "The Law of Success",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal ook bbrand is here for you, and comes in all our fit 
+
+ranges: ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availablePage": [125", 175", "230", "225"],
+      "price": 29.9
+    },
+    {
+      "_id": "image2",
+      "image": "/images/image2.jpg",
+      "title": "Life is What you make it",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal book brand is here for you, and comes in all our fit 
+
+ranges: ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availablePage": ["100", "200", "300"],
+      "price": 18.9
+    },
+    {
+      "_id": "image3",
+      "image": "/images/image3.jpg",
+      "title": "The 21Days Happiness Challange",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal brand is here for you, and comes in all our fit ranges: 
+
+ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availablePage": ["100", "200", "300"],
+      "price": 14.9
+    },
+    {
+      "_id": "image4",
+      "image": "/images/image4.jpg",
+      "title": "Wings of Fire",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal book brand  is here for you, and comes in all our fit 
+
+ranges: ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availablePage": ["150","100", "250"],
+      "price": 25.9
+    },
+    {
+      "_id": "image5",
+      "image": "/images/image5.jpg",
+      "title": "the Act of Latting go",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal book brand is here for you, and comes in all our fit 
+
+ranges: ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availableSizes": ["75", "100", "200"],
+      "price": 10.9
+    },
+    {
+      "_id": "image6",
+      "image": "/images/image6.jpg",
+      "title": "ATTITUDE is Every Things",
+      "description": "This is for all the latest trends, no matter who you are, where you’re from and what you’re up to. Exclusive to ASOS, our universal book brand is here for you, and comes in all our fit 
+
+ranges: ASOS Curve, Tall, Petite and Maternity. Created by us, styled by you.",
+      "availablePage": ["110", "250","125"],
+      "price": 49.9
+    }
+  ]
+}
+ 70  src/index.css 
+@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
+
+html {
+  font-size: 62.5%;
+  box-sizing: border-box;
+@@ -10,9 +12,10 @@ body,
+body,
+input,
+select,
+button,
+textarea {
+  font-family: Montserrat, Helvetica, Arial, sans-serif;
+  font-size: 1.6rem;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.grid-container {
+@@ -25,6 +28,9 @@ textarea {
+  grid-template-columns: 1fr;
+  height: 100%;
+}
+a {
+  text-decoration: none;
+}
+a:hover {
+  color: #ff8000;
+}
+@@ -51,3 +57,65 @@ footer {
+  justify-content: center;
+  align-items: center;
+}
+
+.content {
+  display: flex;
+  flex-wrap: wrap;
+}
+.main {
+  flex: 3 60rem;
+}
+.sidebar {
+  flex: 1 20rem;
+}
+
+/* products */
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+.products li {
+  flex: 0 1 29rem;
+  height: 47rem;
+  padding: 1rem;
+}
+.product {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+.product img {
+  max-width: 37rem;
+  max-height: 37rem;
+}
+.product-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.product-price div,
+.product-price button {
+  text-align: center;
+  flex: 1;
+}
+.product-price div {
+  font-size: 2rem;
+}
+.button {
+  padding: 1rem;
+  border: 0.1rem #c0c0c0 solid;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+.button:hover {
+  border: 0.1rem #808080 solid;
+}
+.button.primary {
+  background-color: #f0c040;
+}
+ 3  src/util.js 
+@@ -0,0 +1,3 @@
+export default function formatCurrency(num) {
+  return "$" + Number(num.toFixed(1)).toLocaleString() + " ";
+}
